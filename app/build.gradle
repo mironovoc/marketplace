@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '8.3.5'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.kafka:kafka-clients:3.7.1'
+    implementation 'org.apache.kafka:kafka-streams:3.7.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+    implementation 'org.slf4j:slf4j-simple:2.0.16'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+
+tasks.shadowJar {
+    archiveFileName = 'marketplace.jar'
+    manifest {
+        attributes 'Main-Class': 'org.marketplace.App'
+    }
+    mergeServiceFiles()
+}

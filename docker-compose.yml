@@ -1,0 +1,255 @@
+name: marketplace
+
+x-kafka-image: &kafka-image confluentinc/cp-kafka:7.6.1
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "5m"
+    max-file: "2"
+
+x-primary: &primary
+  CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+  KAFKA_PROCESS_ROLES: broker,controller
+  KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-a1:29093,2@kafka-a2:29093,3@kafka-a3:29093
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SSL,SSL:SSL,EXTERNAL:SSL
+  KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  KAFKA_INTER_BROKER_LISTENER_NAME: SSL
+  KAFKA_EARLY_START_LISTENERS: CONTROLLER
+  KAFKA_SSL_CLIENT_AUTH: required
+  KAFKA_SSL_KEYSTORE_TYPE: PKCS12
+  KAFKA_SSL_TRUSTSTORE_TYPE: JKS
+  KAFKA_SSL_KEYSTORE_CREDENTIALS: keystore_creds
+  KAFKA_SSL_KEY_CREDENTIALS: key_creds
+  KAFKA_SSL_TRUSTSTORE_FILENAME: truststore.jks
+  KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
+  KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+  KAFKA_SSL_PRINCIPAL_MAPPING_RULES: "RULE:^CN=([^,]*).*$$/$$1/"
+  KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+  KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+  KAFKA_SUPER_USERS: "User:admin;User:kafka-a1;User:kafka-a2;User:kafka-a3;User:connect;User:streams"
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+  KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+  KAFKA_NUM_PARTITIONS: 3
+  KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+  KAFKA_MIN_INSYNC_REPLICAS: 2
+  KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
+  KAFKA_LOG_RETENTION_MS: 604800000
+  KAFKA_LOG_SEGMENT_BYTES: 1073741824
+  KAFKA_LOG_CLEANUP_POLICY: delete
+  KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+  KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+  KAFKA_OPTS: "-javaagent:/opt/jmx/jmx_prometheus_javaagent.jar=7071:/opt/jmx/kafka.yml"
+
+x-health: &health
+  test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 --command-config /etc/kafka/secrets/client.properties"]
+  interval: 10s
+  timeout: 15s
+  retries: 30
+  start_period: 40s
+
+services:
+  kafka-a1:
+    image: *kafka-image
+    hostname: kafka-a1
+    container_name: kafka-a1
+    ports:
+      - "19092:19092"
+      - "7071:7071"
+    environment:
+      <<: *primary
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: SSL://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,EXTERNAL://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka-a1:9092,EXTERNAL://localhost:19092
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka-a1.keystore.p12
+    volumes:
+      - ./secrets/kafka-a1:/etc/kafka/secrets:ro
+      - ./monitoring/jmx_prometheus_javaagent.jar:/opt/jmx/jmx_prometheus_javaagent.jar:ro
+      - ./monitoring/kafka-jmx.yml:/opt/jmx/kafka.yml:ro
+    healthcheck: *health
+    logging: *logging
+    networks: [market]
+
+  kafka-a2:
+    image: *kafka-image
+    hostname: kafka-a2
+    container_name: kafka-a2
+    ports:
+      - "19094:19094"
+      - "7072:7071"
+    environment:
+      <<: *primary
+      KAFKA_NODE_ID: 2
+      KAFKA_LISTENERS: SSL://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,EXTERNAL://0.0.0.0:19094
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka-a2:9092,EXTERNAL://localhost:19094
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka-a2.keystore.p12
+    volumes:
+      - ./secrets/kafka-a2:/etc/kafka/secrets:ro
+      - ./monitoring/jmx_prometheus_javaagent.jar:/opt/jmx/jmx_prometheus_javaagent.jar:ro
+      - ./monitoring/kafka-jmx.yml:/opt/jmx/kafka.yml:ro
+    healthcheck: *health
+    logging: *logging
+    networks: [market]
+
+  kafka-a3:
+    image: *kafka-image
+    hostname: kafka-a3
+    container_name: kafka-a3
+    ports:
+      - "19096:19096"
+      - "7073:7071"
+    environment:
+      <<: *primary
+      KAFKA_NODE_ID: 3
+      KAFKA_LISTENERS: SSL://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,EXTERNAL://0.0.0.0:19096
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka-a3:9092,EXTERNAL://localhost:19096
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka-a3.keystore.p12
+    volumes:
+      - ./secrets/kafka-a3:/etc/kafka/secrets:ro
+      - ./monitoring/jmx_prometheus_javaagent.jar:/opt/jmx/jmx_prometheus_javaagent.jar:ro
+      - ./monitoring/kafka-jmx.yml:/opt/jmx/kafka.yml:ro
+    healthcheck: *health
+    logging: *logging
+    networks: [market]
+
+  kafka-b1:
+    image: *kafka-image
+    hostname: kafka-b1
+    container_name: kafka-b1
+    ports:
+      - "19192:19192"
+      - "7074:7071"
+    environment:
+      CLUSTER_ID: bK7uY2xQ0nR4sT8vW1aZ3c
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-b1:29093
+      KAFKA_LISTENERS: SSL://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,EXTERNAL://0.0.0.0:19192
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka-b1:9092,EXTERNAL://localhost:19192
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SSL,SSL:SSL,EXTERNAL:SSL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: SSL
+      KAFKA_EARLY_START_LISTENERS: CONTROLLER
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka-b1.keystore.p12
+      KAFKA_SSL_KEYSTORE_TYPE: PKCS12
+      KAFKA_SSL_TRUSTSTORE_FILENAME: truststore.jks
+      KAFKA_SSL_TRUSTSTORE_TYPE: JKS
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: key_creds
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+      KAFKA_SSL_PRINCIPAL_MAPPING_RULES: "RULE:^CN=([^,]*).*$$/$$1/"
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: "User:admin;User:kafka-b1;User:connect;User:lake;User:spark"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+      KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_OPTS: "-javaagent:/opt/jmx/jmx_prometheus_javaagent.jar=7071:/opt/jmx/kafka.yml"
+    volumes:
+      - ./secrets/kafka-b1:/etc/kafka/secrets:ro
+      - ./monitoring/jmx_prometheus_javaagent.jar:/opt/jmx/jmx_prometheus_javaagent.jar:ro
+      - ./monitoring/kafka-jmx.yml:/opt/jmx/kafka.yml:ro
+    healthcheck: *health
+    logging: *logging
+    networks: [market]
+
+  topic-init:
+    image: *kafka-image
+    container_name: topic-init
+    depends_on:
+      kafka-a1:
+        condition: service_healthy
+      kafka-a2:
+        condition: service_healthy
+      kafka-a3:
+        condition: service_healthy
+      kafka-b1:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["bash", "/init.sh"]
+    volumes:
+      - ./scripts/init-cluster.sh:/init.sh:ro
+      - ./secrets/clients:/etc/kafka/secrets:ro
+      - ./evidence:/evidence
+    networks: [market]
+
+  hadoop-namenode:
+    image: *kafka-image
+    profiles: ["lake"]
+    hostname: hadoop-namenode
+    container_name: hadoop-namenode
+    user: "0:0"
+    ports:
+      - "9870:9870"
+    entrypoint: ["bash", "/entrypoint.sh", "namenode"]
+    volumes:
+      - D:\tools\hadoop-3.4.1:/opt/hadoop
+      - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+      - ./hadoop/entrypoint.sh:/entrypoint.sh:ro
+    networks: [market]
+
+  hadoop-datanode:
+    image: *kafka-image
+    profiles: ["lake"]
+    hostname: hadoop-datanode
+    container_name: hadoop-datanode
+    user: "0:0"
+    depends_on:
+      - hadoop-namenode
+    restart: on-failure
+    entrypoint: ["bash", "/entrypoint.sh", "datanode"]
+    volumes:
+      - D:\tools\hadoop-3.4.1:/opt/hadoop
+      - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+      - ./hadoop/entrypoint.sh:/entrypoint.sh:ro
+    networks: [market]
+
+  app:
+    image: *kafka-image
+    profiles: ["app"]
+    user: "0:0"
+    working_dir: /work
+    entrypoint: ["java", "-Dfile.encoding=UTF-8", "-jar", "/work/app/build/libs/marketplace.jar"]
+    environment:
+      MARKETPLACE_HOME: /work
+      BOOTSTRAP_A: kafka-a1:9092,kafka-a2:9092,kafka-a3:9092
+      BOOTSTRAP_B: kafka-b1:9092
+      WEBHDFS: http://hadoop-namenode:9870/webhdfs/v1
+    volumes:
+      - D:\kaf\marketplace:/work
+    networks: [market]
+
+  spark:
+    image: *kafka-image
+    profiles: ["app"]
+    user: "0:0"
+    environment:
+      HADOOP_USER_NAME: root
+      HADOOP_CONF_DIR: /opt/hadoop-conf
+      HOME: /tmp
+    entrypoint: ["bash", "-lc"]
+    command: ["export JAVA_HOME=$$(dirname $$(dirname $$(readlink -f $$(which java)))) && /opt/spark/bin/spark-submit --master local[1] --driver-memory 512m --class org.marketplace.SparkRecommendations /job/recommendations.jar"]
+    volumes:
+      - D:\tools\spark-3.5.3-bin-hadoop3:/opt/spark
+      - ./spark/recommendations.jar:/job/recommendations.jar:ro
+      - ./hadoop:/opt/hadoop-conf:ro
+    networks: [market]
+
+networks:
+  market:
+    name: marketplace

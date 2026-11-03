@@ -1,0 +1,51 @@
+{
+  "uid": "kafka-marketplace",
+  "title": "Kafka marketplace",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "10s",
+  "time": {"from": "now-15m", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Брокеры онлайн",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+      "targets": [{"refId": "A", "expr": "sum(up{job=\"kafka\"})"}],
+      "fieldConfig": {"defaults": {"unit": "none", "decimals": 0}}
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Недореплицированные разделы",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+      "targets": [{"refId": "A", "expr": "sum(kafka_under_replicated_partitions) or vector(0)"}]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Состояние целей Prometheus",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{"refId": "A", "expr": "up{job=\"kafka\"}", "legendFormat": "{{broker}}"}]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Входящие сообщения",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "targets": [{"refId": "A", "expr": "kafka_messages_in_total", "legendFormat": "{{broker}}"}]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Активный контроллер",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [{"refId": "A", "expr": "kafka_active_controller_count", "legendFormat": "{{broker}}"}]
+    }
+  ]
+}

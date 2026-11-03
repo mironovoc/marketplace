@@ -1,0 +1,12 @@
+route:
+  receiver: marketplace
+  group_by: ["alertname", "broker"]
+  group_wait: 5s
+  group_interval: 30s
+  repeat_interval: 1h
+
+receivers:
+  - name: marketplace
+    webhook_configs:
+      - url: http://127.0.0.1:9098/alerts
+        send_resolved: true

@@ -1,0 +1,9 @@
+{
+  "name": "clean-products-file",
+  "config": {
+    "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+    "tasks.max": "1",
+    "topics": "shop.products.clean",
+    "file": "D:/kaf/marketplace/data/runtime/products-clean.jsonl"
+  }
+}

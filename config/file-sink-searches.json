@@ -1,0 +1,9 @@
+{
+  "name": "client-searches-file",
+  "config": {
+    "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+    "tasks.max": "1",
+    "topics": "client.searches",
+    "file": "D:/kaf/marketplace/data/runtime/searches.jsonl"
+  }
+}

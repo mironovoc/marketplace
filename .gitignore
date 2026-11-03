@@ -1,0 +1,16 @@
+secrets/
+app/build/
+app/.gradle/
+data/runtime/
+data/nflog
+data/silences
+connect-plugins/
+monitoring/jmx_prometheus_javaagent.jar
+monitoring/data/
+spark/classes/
+spark/recommendations.jar
+.idea/
+.aiforopenide/
+evidence/*
+!evidence/.gitkeep
+*.log

@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["localhost:9093"]
+
+scrape_configs:
+  - job_name: kafka
+    static_configs:
+      - targets: ["localhost:17071"]
+        labels:
+          broker: kafka-a1
+          cluster: primary
+      - targets: ["localhost:17072"]
+        labels:
+          broker: kafka-a2
+          cluster: primary
+      - targets: ["localhost:17073"]
+        labels:
+          broker: kafka-a3
+          cluster: primary
+      - targets: ["localhost:17074"]
+        labels:
+          broker: kafka-b1
+          cluster: analytics

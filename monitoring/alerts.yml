@@ -1,0 +1,11 @@
+groups:
+  - name: kafka
+    rules:
+      - alert: KafkaBrokerDown
+        expr: up{job="kafka"} == 0
+        for: 20s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Брокер {{ $labels.broker }} недоступен"
+          description: "Prometheus не получает метрики брокера {{ $labels.broker }}."
