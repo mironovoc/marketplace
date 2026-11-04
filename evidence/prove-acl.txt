@@ -1,0 +1,1 @@
+OK: магазину запрещена запись в shop.products.clean

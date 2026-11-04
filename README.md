@@ -105,21 +105,43 @@ java -jar app\build\libs\marketplace.jar prove-acl
 
 ## Запуск
 
-Процессы Kafka, HDFS, Spark, Connect, Prometheus, Grafana и Alertmanager запускаются на Windows, каталоги данных лежат на диске D:. Нужны JDK 21 (`D:\Java\jdk-21`), Gradle 8 (`D:\tools\gradle-8.10.2`) и свободное место на D:. Архивы Kafka, Spark, Hadoop, Prometheus, Grafana и Alertmanager скрипт берёт из `D:\tools`, а если их нет — из `D:\tools\downloads`. Агент JMX Exporter скачивается в `monitoring`, если его ещё нет. Файл `docker-compose.yml` описывает ту же схему контейнерами и для этого запуска не требуется.
+Скрипты сами находят корень репозитория. Каталог с Kafka, Hadoop, Spark, Prometheus, Grafana, Alertmanager и Gradle задаётся переменной `MARKETPLACE_TOOLS`, JDK — переменной `JAVA_HOME`. Свои пути удобно записать в `scripts/local.ps1` (образец — `scripts/local.ps1.example`, сам файл в git не входит). Если `JAVA_HOME` уже стоит в системе, а `gradle` есть в `PATH`, файл нужен только ради `MARKETPLACE_TOOLS`.
+
+В `MARKETPLACE_TOOLS` ожидаются каталоги `kafka_2.13-3.7.1`, `hadoop-3.4.1`, `spark-3.5.3-bin-hadoop3`, `prometheus-2.54.1.windows-amd64`, `alertmanager-0.27.0.windows-amd64` и `grafana*`. Если их нет, `demo.ps1` распакует архивы из `downloads` внутри того же каталога. Агент JMX Exporter скачивается в `monitoring`, если его ещё нет.
+
+Конфиги Connect, MirrorMaker, файловых sink, Grafana и HDFS скрипт собирает из `config/templates` в `data/runtime/generated`. В шаблонах путь проекта — плейсхолдер `{{ROOT}}`, в git нет абсолютных путей машины.
+
+Продюсеры магазина, клиента, Spark и фильтра оставляют идемпотентность Kafka по умолчанию и просят `acks=all`. Явно выключать её не нужно: при повторе отправки ключ товара не должен плодить дубли.
+
+`docker-compose.yml` для этого запуска не требуется. Если поднимать профили `lake` и `app`, в `.env` нужно задать `MARKETPLACE_TOOLS` (образец — `.env.example`). Каталог проекта монтируется как `./`.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File D:\kaf\marketplace\scripts\demo.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\demo.ps1
 ```
 
-Скрипт выпускает сертификаты, собирает jar, поднимает четыре брокера KRaft и HDFS, включает Connect, прогоняет товарный файл, Spark и клиентские команды, останавливает процесс `kafka-a3` и ждёт алерт `KafkaBrokerDown`, затем возвращает брокер. Логи прогона лежат в `evidence\`.
+Скрипт выпускает сертификаты, собирает jar, поднимает четыре брокера KRaft и HDFS, включает Connect, прогоняет товарный файл, Spark и клиентские команды, останавливает процесс `kafka-a3` и ждёт алерт `KafkaBrokerDown`, затем возвращает брокер.
 
 Остановка:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File D:\kaf\marketplace\scripts\down.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\down.ps1
 ```
 
+`down.ps1` ищет `docker` в `PATH` и в стандартных каталогах Docker Desktop. Если Docker не установлен, скрипт просто останавливает процессы Windows.
+
 Дашборд Grafana называется `Kafka marketplace`.
+
+## Что видно по прогону
+
+В `evidence/` лежат результаты уже выполненного прогона, остальное (журналы процессов, сырой runtime) в git не входит.
+
+| Файл | Что подтверждает |
+|---|---|
+| `evidence/products-clean.jsonl` | в файл попали разрешённые товары, `99999` среди них нет |
+| `evidence/prove-acl.txt` | магазину отказано в записи в `shop.products.clean` |
+| `evidence/alerts.log` | Alertmanager прислал `KafkaBrokerDown` для `kafka-a3` и затем `resolved` |
+| `evidence/alertmanager-alerts.json` | тот же алерт в API Alertmanager |
+| `evidence/grafana-dashboard.png` | дашборд Grafana с метриками брокеров |
 
 ## Как устроена фильтрация
 

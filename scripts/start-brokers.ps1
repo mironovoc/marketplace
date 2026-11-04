@@ -4,9 +4,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$root = 'D:\kaf\marketplace'
-$kafkaHome = 'D:\tools\kafka_2.13-3.7.1'
-$bin = Join-Path $kafkaHome 'bin\windows'
+. "$PSScriptRoot\env.ps1"
 $runtime = Join-Path $root 'data\runtime'
 $utf8 = New-Object System.Text.UTF8Encoding $false
 
@@ -44,16 +42,21 @@ if ($Stop) {
     return
 }
 
+Ensure-Java
+$kafkaHome = Get-KafkaHome
+$rootFwd = $root.Replace('\', '/')
+$bin = Join-Path $kafkaHome 'bin\windows'
+
 $selected = if ($Name) { @($brokers | Where-Object Name -eq $Name) } else { $brokers }
 if ($selected.Count -eq 0) { throw "unknown broker $Name" }
 
 $admin = @"
 security.protocol=SSL
-ssl.keystore.location=D:/kaf/marketplace/secrets/clients/admin.keystore.p12
+ssl.keystore.location=$rootFwd/secrets/clients/admin.keystore.p12
 ssl.keystore.password=your-password
 ssl.keystore.type=PKCS12
 ssl.key.password=your-password
-ssl.truststore.location=D:/kaf/marketplace/secrets/clients/truststore.jks
+ssl.truststore.location=$rootFwd/secrets/clients/truststore.jks
 ssl.truststore.password=your-password
 ssl.truststore.type=JKS
 ssl.endpoint.identification.algorithm=
@@ -72,7 +75,7 @@ foreach ($broker in $selected) {
     $rf = if ($isA) { 3 } else { 1 }
     $isr = if ($isA) { 2 } else { 1 }
     $config = Join-Path $runtime "brokers\$($broker.Name).properties"
-    $logDir = "D:/kaf/marketplace/data/runtime/kafka/$($broker.Name)"
+    $logDir = "$rootFwd/data/runtime/kafka/$($broker.Name)"
     $text = @"
 process.roles=broker,controller
 node.id=$($broker.NodeId)
@@ -83,11 +86,11 @@ listener.security.protocol.map=CONTROLLER:SSL,SSL:SSL
 controller.listener.names=CONTROLLER
 inter.broker.listener.name=SSL
 log.dirs=$logDir
-ssl.keystore.location=D:/kaf/marketplace/secrets/$($broker.Name)/$($broker.Name).keystore.p12
+ssl.keystore.location=$rootFwd/secrets/$($broker.Name)/$($broker.Name).keystore.p12
 ssl.keystore.password=your-password
 ssl.key.password=your-password
 ssl.keystore.type=PKCS12
-ssl.truststore.location=D:/kaf/marketplace/secrets/$($broker.Name)/truststore.jks
+ssl.truststore.location=$rootFwd/secrets/$($broker.Name)/truststore.jks
 ssl.truststore.password=your-password
 ssl.truststore.type=JKS
 ssl.client.auth=required
@@ -118,10 +121,9 @@ log.segment.bytes=104857600
     $outLog = Join-Path $runtime "logs\$($broker.Name).out"
     $errLog = Join-Path $runtime "logs\$($broker.Name).err"
     New-Item -ItemType Directory -Force -Path (Split-Path $outLog) | Out-Null
-    $env:JAVA_HOME = 'D:\Java\jdk-21'
     $env:KAFKA_HEAP_OPTS = '-Xmx384M -Xms128M'
-    $env:KAFKA_LOG4J_OPTS = '-Dlog4j.configuration=file:///D:/kaf/marketplace/config/kafka-log4j.properties'
-    $env:KAFKA_OPTS = "-javaagent:D:/kaf/marketplace/monitoring/jmx_prometheus_javaagent.jar=$($broker.Jmx):D:/kaf/marketplace/monitoring/kafka-jmx.yml"
+    $env:KAFKA_LOG4J_OPTS = "-Dlog4j.configuration=file:///$rootFwd/config/kafka-log4j.properties"
+    $env:KAFKA_OPTS = "-javaagent:$rootFwd/monitoring/jmx_prometheus_javaagent.jar=$($broker.Jmx):$rootFwd/monitoring/kafka-jmx.yml"
     $proc = Start-Process -FilePath "$bin\kafka-server-start.bat" -ArgumentList $config -WorkingDirectory $kafkaHome -WindowStyle Hidden -PassThru -RedirectStandardOutput $outLog -RedirectStandardError $errLog
     Write-Text (Join-Path $runtime "brokers\$($broker.Name).pid") "$($proc.Id)`n"
     Remove-Item Env:KAFKA_OPTS -ErrorAction SilentlyContinue

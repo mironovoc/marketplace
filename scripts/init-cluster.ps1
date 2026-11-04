@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
-$root = 'D:\kaf\marketplace'
-$bin = 'D:\tools\kafka_2.13-3.7.1\bin\windows'
+. "$PSScriptRoot\env.ps1"
+Ensure-Java
+$bin = Join-Path (Get-KafkaHome) 'bin\windows'
 $admin = "$root\data\runtime\admin-host.properties"
-$env:JAVA_HOME = 'D:\Java\jdk-21'
 
 function Invoke-Kafka([string]$Tool, [string[]]$ArgumentList) {
     & "$bin\$Tool" @ArgumentList

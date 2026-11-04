@@ -1,7 +1,8 @@
 $ErrorActionPreference = 'Stop'
-$openssl = 'C:\Program Files\Git\usr\bin\openssl.exe'
-$keytool = 'D:\Java\jdk-21\bin\keytool.exe'
-$root = 'D:\kaf\marketplace'
+. "$PSScriptRoot\env.ps1"
+Ensure-Java
+$openssl = Find-OpenSsl
+$keytool = Join-Path $env:JAVA_HOME 'bin\keytool.exe'
 $pass = 'your-password'
 $secrets = Join-Path $root 'secrets'
 

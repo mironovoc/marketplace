@@ -1,0 +1,6 @@
+# Скопируйте в scripts/local.ps1 и поправьте пути. local.ps1 в git не коммитится.
+# Если JAVA_HOME уже задан в системе и Gradle есть в PATH, этот файл не обязателен.
+
+$env:JAVA_HOME = 'C:\Program Files\Java\jdk-21'
+$env:MARKETPLACE_TOOLS = 'C:\tools'
+# $env:GRADLE_USER_HOME = 'C:\gradle-home'

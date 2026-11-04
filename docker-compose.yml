@@ -196,7 +196,7 @@ services:
       - "9870:9870"
     entrypoint: ["bash", "/entrypoint.sh", "namenode"]
     volumes:
-      - D:\tools\hadoop-3.4.1:/opt/hadoop
+      - ${MARKETPLACE_TOOLS:?Set MARKETPLACE_TOOLS, see .env.example}/hadoop-3.4.1:/opt/hadoop
       - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
       - ./hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
       - ./hadoop/entrypoint.sh:/entrypoint.sh:ro
@@ -213,7 +213,7 @@ services:
     restart: on-failure
     entrypoint: ["bash", "/entrypoint.sh", "datanode"]
     volumes:
-      - D:\tools\hadoop-3.4.1:/opt/hadoop
+      - ${MARKETPLACE_TOOLS:?Set MARKETPLACE_TOOLS, see .env.example}/hadoop-3.4.1:/opt/hadoop
       - ./hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
       - ./hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
       - ./hadoop/entrypoint.sh:/entrypoint.sh:ro
@@ -231,7 +231,7 @@ services:
       BOOTSTRAP_B: kafka-b1:9092
       WEBHDFS: http://hadoop-namenode:9870/webhdfs/v1
     volumes:
-      - D:\kaf\marketplace:/work
+      - ./:/work
     networks: [market]
 
   spark:
@@ -245,7 +245,7 @@ services:
     entrypoint: ["bash", "-lc"]
     command: ["export JAVA_HOME=$$(dirname $$(dirname $$(readlink -f $$(which java)))) && /opt/spark/bin/spark-submit --master local[1] --driver-memory 512m --class org.marketplace.SparkRecommendations /job/recommendations.jar"]
     volumes:
-      - D:\tools\spark-3.5.3-bin-hadoop3:/opt/spark
+      - ${MARKETPLACE_TOOLS:?Set MARKETPLACE_TOOLS, see .env.example}/spark-3.5.3-bin-hadoop3:/opt/spark
       - ./spark/recommendations.jar:/job/recommendations.jar:ro
       - ./hadoop:/opt/hadoop-conf:ro
     networks: [market]

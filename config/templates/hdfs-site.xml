@@ -10,11 +10,11 @@
   </property>
   <property>
     <name>dfs.namenode.name.dir</name>
-    <value>file:///D:/kaf/marketplace/data/runtime/hadoop/name</value>
+    <value>file:///{{ROOT}}/data/runtime/hadoop/name</value>
   </property>
   <property>
     <name>dfs.datanode.data.dir</name>
-    <value>file:///D:/kaf/marketplace/data/runtime/hadoop/data</value>
+    <value>file:///{{ROOT}}/data/runtime/hadoop/data</value>
   </property>
   <property>
     <name>dfs.namenode.rpc-address</name>

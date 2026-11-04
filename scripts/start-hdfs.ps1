@@ -1,8 +1,7 @@
 param([switch]$Stop)
 
 $ErrorActionPreference = 'Stop'
-$root = 'D:\kaf\marketplace'
-$hadoop = 'D:\tools\hadoop-3.4.1'
+. "$PSScriptRoot\env.ps1"
 $runtime = Join-Path $root 'data\runtime\hadoop'
 $utf8 = New-Object System.Text.UTF8Encoding $false
 
@@ -20,6 +19,9 @@ if ($Stop) {
     return
 }
 
+Ensure-Java
+$hadoop = Get-HadoopHome
+
 if (-not (Test-Path "$hadoop\bin\hdfs.cmd")) { throw 'Hadoop is not extracted' }
 New-Item -ItemType Directory -Force -Path "$hadoop\bin", "$runtime\name", "$runtime\data", "$runtime\tmp", "$root\data\runtime\logs" | Out-Null
 $winutils = "$hadoop\bin\winutils.exe"
@@ -29,9 +31,9 @@ if (-not (Test-Path $winutils) -or (Get-Item $winutils).Length -lt 50KB) {
 }
 if (-not (Test-Path $winutils) -or (Get-Item $winutils).Length -lt 50KB) { throw 'winutils.exe was not downloaded' }
 
-$env:JAVA_HOME = 'D:\Java\jdk-21'
 $env:HADOOP_HOME = $hadoop
-$env:HADOOP_CONF_DIR = "$root\hadoop\host"
+Initialize-GeneratedConfigs | Out-Null
+$env:HADOOP_CONF_DIR = "$root\data\runtime\hadoop-conf"
 $env:HADOOP_USER_NAME = 'root'
 $env:HADOOP_OPTS = '--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-exports=java.base/sun.nio.ch=ALL-UNNAMED'
 $env:Path = "$hadoop\bin;$env:JAVA_HOME\bin;$env:Path"

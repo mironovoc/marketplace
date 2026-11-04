@@ -10,6 +10,6 @@
   </property>
   <property>
     <name>hadoop.tmp.dir</name>
-    <value>D:/kaf/marketplace/data/runtime/hadoop/tmp</value>
+    <value>{{ROOT}}/data/runtime/hadoop/tmp</value>
   </property>
 </configuration>

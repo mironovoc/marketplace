@@ -1,5 +1,6 @@
 secrets/
 app/build/
+app/bin/
 app/.gradle/
 data/runtime/
 data/nflog
@@ -11,6 +12,13 @@ spark/classes/
 spark/recommendations.jar
 .idea/
 .aiforopenide/
+scripts/local.ps1
+.env
 evidence/*
 !evidence/.gitkeep
+!evidence/products-clean.jsonl
+!evidence/prove-acl.txt
+!evidence/grafana-dashboard.png
+!evidence/alertmanager-alerts.json
 *.log
+!evidence/alerts.log

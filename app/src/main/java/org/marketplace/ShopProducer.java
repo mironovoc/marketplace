@@ -36,7 +36,6 @@ final class ShopProducer {
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.put(ProducerConfig.ACKS_CONFIG, "all");
-        properties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "false");
         properties.put(ProducerConfig.RETRIES_CONFIG, "10");
         properties.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, "20000");
         Ssl.apply(properties, user);

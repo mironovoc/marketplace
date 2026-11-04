@@ -28,7 +28,6 @@ final class ProductFilterApp {
         properties.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.AT_LEAST_ONCE);
         properties.put("consumer.auto.offset.reset", "earliest");
         properties.put("producer.acks", "all");
-        properties.put("producer.enable.idempotence", "false");
         Ssl.apply(properties, "streams");
 
         StreamsBuilder builder = new StreamsBuilder();
